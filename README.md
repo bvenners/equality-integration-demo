@@ -1,6 +1,14 @@
 equality-integration-demo
 =========================
 
+This project shows how Scalactic's Equality can be integrated with other equality mechanisms
+such as the Eq typeclass from Spire or the Equal typeclass from Scalaz, and how that can then
+be used in ScalaTest when testing projects that use those libraries. It was motivated by this
+issue in Spire: 
+
+First, the Haskell-inspired typeclass approach to equality in Spire and Scalaz has some problems
+with how Scala applies implicit conversions. Here's an example in Scalaz:
+
 ```scala
 -------------
 
@@ -17,21 +25,21 @@ import scalaz._
 scala> import Scalaz._
 import Scalaz._
 
-scala> 1L === 1
+scala> 1L === 1 // An implicit Long => Int conversion is applied
 res0: Boolean = true
 
-scala> 1 === 1L
+scala> 1 === 1L // Asymmetrically, this doesn't compile
 <console>:14: error: could not find implicit value for parameter F0: scalaz.Equal[Any]
               1 === 1L
               ^
 
-scala> 1 === ()
+scala> 1 === () // This fails to compile, as you'd wish
 <console>:14: error: not enough arguments for method ===: (other: Int)Boolean.
 Unspecified value parameter other.
               1 === ()
                 ^
 
-scala> () === 1
+scala> () === 1 // Asymmetrically, this compiles, and moreover yields true!
 <console>:14: warning: a pure expression does nothing in statement position; you may be omitting necessary parentheses
               () === 1
                      ^
@@ -44,7 +52,7 @@ defined class Box
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1)  // This fails to compile as planned, because no Equal[Box[Int]] has yet been defined
 <console>:16: error: could not find implicit value for parameter F0: scalaz.Equal[Box[Int]]
               Box(1) === Box(1)
                  ^
@@ -59,17 +67,17 @@ boxEqual: [T]=> scalaz.Equal[Box[T]]
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // Now it works
 res5: Boolean = true
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // This does not work, as the types don't match
 <console>:17: error: could not find implicit value for parameter F0: scalaz.Equal[Any]
               Box(1) === 1
                  ^
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // And the compile error is symmetric
 <console>:17: error: could not find implicit value for parameter F0: scalaz.Equal[Object]
               1 === Box(1)
               ^
@@ -84,10 +92,10 @@ widenIntToBox: (i: Int)Box[Int]
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // But define an Int => Box[Int] implicit widening conversion
 res8: Boolean = true
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // And you get that assymetry again
 <console>:19: error: could not find implicit value for parameter F0: scalaz.Equal[Object]
               1 === Box(1)
               ^
@@ -114,7 +122,7 @@ import spire.implicits._
 scala> 1L === 1
 res0: Boolean = true
 
-scala> 1 === 1L
+scala> 1 === 1L // Spire's Eq has a similar problem to Scalaz's Equal
 <console>:17: error: diverging implicit expansion for type spire.algebra.Eq[Any]
 starting with method SeqOrder in trait SeqInstances2
               1 === 1L
@@ -125,7 +133,7 @@ scala> 1 === ()
               1 === ()
                 ^
 
-scala> () === 1
+scala> () === 1 // But at least both of these comparisons with Unit fail to compile in Spire
 <console>:17: error: could not find implicit value for evidence parameter of type spire.algebra.Eq[AnyVal]
               () === 1
               ^
@@ -137,7 +145,7 @@ defined class Box
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // As before, this is by design as no Eq[Box[Int]] as yet exists
 <console>:19: error: could not find implicit value for evidence parameter of type spire.algebra.Eq[Box[Int]]
               Box(1) === Box(1)
                  ^
@@ -152,18 +160,18 @@ boxEq: [T]=> spire.algebra.Eq[Box[T]]
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // Now this works
 res5: Boolean = true
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // A slightly scary compiler error message, but...
 <console>:20: error: diverging implicit expansion for type spire.algebra.Eq[Any]
 starting with method SeqOrder in trait SeqInstances2
               Box(1) === 1
                  ^
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // The good thing is both of these fail to compile symmetrically
 <console>:20: error: could not find implicit value for evidence parameter of type spire.algebra.Eq[Object]
               1 === Box(1)
               ^
@@ -178,7 +186,7 @@ widenIntToBox: (i: Int)Box[Int]
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // But define the widening conversion, and the assymetry shows up again
 res8: Boolean = true
 
 scala> 1 === Box(1)
@@ -193,10 +201,10 @@ half: spire.math.Rational = 1/2
 
 scala> 
 
-scala> half === 0.5
+scala> half === 0.5 // Note that it happens with Spire's own implicit widening conversions
 res10: Boolean = true
 
-scala> 0.5 === half
+scala> 0.5 === half // Such as Double => Rational.
 <console>:23: error: could not find implicit value for evidence parameter of type spire.algebra.Eq[Object]
               0.5 === half
               ^
