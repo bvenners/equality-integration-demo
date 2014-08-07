@@ -95,7 +95,7 @@ scala>
 scala> Box(1) === 1 // But define an Int => Box[Int] implicit widening conversion
 res8: Boolean = true
 
-scala> 1 === Box(1) // And you get that assymetry again
+scala> 1 === Box(1) // And you get that asymmetry again
 <console>:19: error: could not find implicit value for parameter F0: scalaz.Equal[Object]
               1 === Box(1)
               ^
@@ -191,7 +191,7 @@ widenIntToBox: (i: Int)Box[Int]
 
 scala> 
 
-scala> Box(1) === 1 // But define the widening conversion, and the assymetry shows up again
+scala> Box(1) === 1 // But define the widening conversion, and the asymmetry shows up again
 res8: Boolean = true
 
 scala> 1 === Box(1)
@@ -296,7 +296,7 @@ scala> :q
 
 Next I'll demo how you can integrate Scalactic with other libraries equality mechanisms.
 This makes it nicer to test projects that use libraries like Scalaz or Spire with 
-ScalaTest, but also solves the assymetry problems. You'll find equalitydemo.SpireEquality 
+ScalaTest, but also solves the asymmetry problems. You'll find equalitydemo.SpireEquality 
 object in the src/main/scala directory of this project.
 
 ```scala
