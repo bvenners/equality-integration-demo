@@ -4,7 +4,7 @@ equality-integration-demo
 This project shows how Scalactic's Equality can be integrated with other equality mechanisms
 such as the Eq typeclass from Spire or the Equal typeclass from Scalaz, and how that can then
 be used in ScalaTest when testing projects that use those libraries. It was motivated by this
-issue in Spire: 
+issue in Spire: [https://github.com/non/spire/issues/294]
 
 First, the Haskell-inspired typeclass approach to equality in Spire and Scalaz has some problems
 with how Scala applies implicit conversions. Here's an example in Scalaz:
@@ -103,6 +103,11 @@ scala> 1 === Box(1) // And you get that assymetry again
 scala> :q
 
 [success] Total time: 19 s, completed Aug 6, 2014 8:35:57 PM
+```
+
+Spire's Eq typeclass exhibits very similar behavior:
+
+```scala
 > console
 [info] Starting scala interpreter...
 [info] 
@@ -212,6 +217,11 @@ scala> 0.5 === half // Such as Double => Rational.
 scala> :q
 
 [success] Total time: 22 s, completed Aug 6, 2014 8:36:20 PM
+```
+By contrast, Scalactic's equality exhibits symmetry in whether or not
+two types compile:
+
+```scala
 > console
 [info] Starting scala interpreter...
 [info] 
@@ -228,15 +238,15 @@ import ConversionCheckedTripleEquals._
 scala> 1L === 1
 res0: Boolean = true
 
-scala> 1 === 1L
+scala> 1 === 1L // Both compile
 res1: Boolean = true
 
-scala> 1 === ()
+scala> 1 === () 
 <console>:14: error: types Int and Unit do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Int,Unit]
               1 === ()
                 ^
 
-scala> () === 1
+scala> () === 1 // Neither compile
 <console>:14: error: types Unit and Int do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Unit,Int]
               () === 1
                  ^
@@ -248,7 +258,7 @@ defined class Box
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // This compiles because Scalactic provides a default Equivalence[T] typeclass
 res4: Boolean = true
 
 scala> 
@@ -258,7 +268,7 @@ scala> Box(1) === 1
               Box(1) === 1
                      ^
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // These symmetrically don't compile in all three libraries
 <console>:16: error: types Int and Box[Int] do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Int,Box[Int]]
               1 === Box(1)
                 ^
@@ -276,12 +286,20 @@ scala>
 scala> Box(1) === 1
 res7: Boolean = true
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // But in Scalactic, this compiles in either arrangement
 res8: Boolean = true
 
 scala> :q
 
 [success] Total time: 15 s, completed Aug 6, 2014 8:36:39 PM
+```
+
+Next I'll demo how you can integrate Scalactic with other libraries equality mechanisms.
+This makes it nicer to test projects that use libraries like Scalaz or Spire with 
+ScalaTest, but also solves the assymetry problems. You'll find equalitydemo.SpireEquality 
+object in the src/main/scala directory of this project.
+
+```scala
 > console
 [info] Starting scala interpreter...
 [info] 
@@ -304,7 +322,7 @@ import equalitydemo.SpireEquality._
 scala> 1L === 1
 res0: Boolean = true
 
-scala> 1 === 1L
+scala> 1 === 1L // This compiles symmetrically
 res1: Boolean = true
 
 scala> 1 === ()
@@ -312,7 +330,7 @@ scala> 1 === ()
               1 === ()
                 ^
 
-scala> () === 1
+scala> () === 1 // This fails to compile symmetrically
 <console>:20: error: types Unit and Int do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Unit,Int]
               () === 1
                  ^
@@ -324,7 +342,7 @@ defined class Box
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // This does not compile because no Eq[Box[Int]] exists
 <console>:22: error: types Box[Int] and Box[Int] do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Box[Int],Box[Int]]
               Box(1) === Box(1)
                      ^
@@ -339,7 +357,7 @@ boxEq: [T]=> spire.algebra.Eq[Box[T]]
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // Now it works
 res5: Boolean = true
 
 scala> 
@@ -349,7 +367,7 @@ scala> Box(1) === 1
               Box(1) === 1
                      ^
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // This is as before
 <console>:23: error: types Int and Box[Int] do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Int,Box[Int]]
               1 === Box(1)
                 ^
@@ -364,10 +382,10 @@ widenIntToBox: (i: Int)Box[Int]
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // But now, this is symmetric.
 res8: Boolean = true
 
-scala> 1 === Box(1)
+scala> 1 === Box(1) // I.e., by getting all Scalactic on Spire, you get compile symmetry with Spire's Eq
 res9: Boolean = true
 
 scala> 
@@ -380,12 +398,17 @@ scala>
 scala> half === 0.5
 res10: Boolean = true
 
-scala> 0.5 === half
+scala> 0.5 === half // Here it is again. Compile symmetry with Spire's Eq.
 res11: Boolean = true
 
 scala> :q
 
 [success] Total time: 18 s, completed Aug 6, 2014 8:37:00 PM
+```
+
+And the same thing goes for Scalaz:
+
+```scala
 > console
 [info] Starting scala interpreter...
 [info] 
@@ -405,7 +428,7 @@ import equalitydemo.ScalazEquality._
 scala> 1L === 1
 res0: Boolean = true
 
-scala> 1 === 1L
+scala> 1 === 1L // This is fixed, symmetric.
 res1: Boolean = true
 
 scala> 1 === ()
@@ -413,7 +436,7 @@ scala> 1 === ()
               1 === ()
                 ^
 
-scala> () === 1
+scala> () === 1 // This is fixed, symmetric and, especially, doesn't result in true!
 <console>:17: error: types Unit and Int do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Unit,Int]
               () === 1
                  ^
@@ -425,7 +448,7 @@ defined class Box
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // Doesn't compile because no Equal[Box[Int]]
 <console>:19: error: types Box[Int] and Box[Int] do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Box[Int],Box[Int]]
               Box(1) === Box(1)
                      ^
@@ -440,12 +463,12 @@ boxEqual: [T]=> scalaz.Equal[Box[T]]
 
 scala> 
 
-scala> Box(1) === Box(1)
+scala> Box(1) === Box(1) // Now it works
 res5: Boolean = true
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // These still don't work, as desired
 <console>:20: error: types Box[Int] and Int do not adhere to the type constraint selected for the === and !== operators; the missing implicit parameter is of type org.scalactic.Constraint[Box[Int],Int]
               Box(1) === 1
                      ^
@@ -465,7 +488,7 @@ widenIntToBox: (i: Int)Box[Int]
 
 scala> 
 
-scala> Box(1) === 1
+scala> Box(1) === 1 // But now you have symmetry here too
 res8: Boolean = true
 
 scala> 1 === Box(1)
@@ -474,6 +497,18 @@ res9: Boolean = true
 scala> :q
 
 [success] Total time: 19 s, completed Aug 6, 2014 8:37:29 PM
+```
+
+That said, the original motivation for this demo was to show how to enhance ScalaTest
+to make it nicer to test Spire. The same technique works for Scalaz. What I think
+might make sense is to create scalatest-plus-spire and a scalatest-plus-scalaz
+projects if people are interested. Essentially you can use assertions or matchers
+that use the Eq or Equal typeclasses instead of Scalactic's built-in Equivalence
+typeclass if that helps you test code that uses Scalaz and/or Spire. You can mix
+and match them, because importing one hides the other. Here's the same demo, but
+this time using ScalaTest's assertions:
+
+```scala
 > test:console
 [info] Starting scala interpreter...
 [info] 
@@ -554,7 +589,7 @@ scala> assert(Box(1) === 1)
 
 scala> assert(1 === Box(1))
 
-scala> assert(2 === Box(1))
+scala> assert(2 === Box(1)) // Note that you still get nice error messages from ScalaTest's assert macro:
 org.scalatest.exceptions.TestFailedException: 2 did not equal Box(1)
 	at org.scalatest.Assertions$class.newAssertionFailedException(Assertions.scala:500)
 	...
@@ -562,7 +597,11 @@ org.scalatest.exceptions.TestFailedException: 2 did not equal Box(1)
 scala> :q
 
 [success] Total time: 12 s, completed Aug 6, 2014 8:37:42 PM
+```
 
+And here's the same example with Spire, but using matchers:
+
+```scala
 > test:console
 [info] Starting scala interpreter...
 [info] 
@@ -647,14 +686,15 @@ scala> half must === (0.5)
 
 scala> 0.5 must === (half)
 
-scala> 2 must === (Box(1))
+scala> 2 must === (Box(1)) // Again, you still get ScalaTest's nice error messages:
 org.scalatest.exceptions.TestFailedException: 2 did not equal Box(1)
 	at org.scalatest.MatchersHelper$.newTestFailedException(MatchersHelper.scala:160)
 	...
 
 ```
 
-Below is what I copied and pasted into the REPL that produced the above output:
+Below is what I copied and pasted into the REPL that produced the above output, in 
+case you want to try it. Just clone the project and type sbt.
 
 ```scala
 > console
