@@ -52,7 +52,7 @@ defined class Box
 
 scala> 
 
-scala> Box(1) === Box(1)  // This fails to compile as planned, because no Equal[Box[Int]] has yet been defined
+scala> Box(1) === Box(1)  // This fails to compile as planned, because no Equal[Box[Int]] exists
 <console>:16: error: could not find implicit value for parameter F0: scalaz.Equal[Box[Int]]
               Box(1) === Box(1)
                  ^
@@ -72,7 +72,7 @@ res5: Boolean = true
 
 scala> 
 
-scala> Box(1) === 1 // This does not work, as the types don't match
+scala> Box(1) === 1 // This correctly not compile, as the types don't match
 <console>:17: error: could not find implicit value for parameter F0: scalaz.Equal[Any]
               Box(1) === 1
                  ^
@@ -313,7 +313,7 @@ import spire.algebra._
 scala> import spire.math._
 import spire.math._
 
-scala> import spire.implicits.{eqOps => _, _}
+scala> import spire.implicits.{eqOps => _, _} // Must turn off Spires === operator
 import spire.implicits.{eqOps=>_, _}
 
 scala> import equalitydemo.SpireEquality._
@@ -385,7 +385,7 @@ scala>
 scala> Box(1) === 1 // But now, this is symmetric.
 res8: Boolean = true
 
-scala> 1 === Box(1) // I.e., by getting all Scalactic on Spire, you get compile symmetry with Spire's Eq
+scala> 1 === Box(1) // I.e., by integrating Scalactic with Spire, you get compile symmetry with Spire's Eq
 res9: Boolean = true
 
 scala> 
@@ -419,7 +419,7 @@ Type :help for more information.
 scala> import scalaz._
 import scalaz._
 
-scala> import Scalaz.{ToEqualOps => _, _}
+scala> import Scalaz.{ToEqualOps => _, _} // Must turn off Scalaz's === operator
 import Scalaz.{ToEqualOps=>_, _}
 
 scala> import equalitydemo.ScalazEquality._
